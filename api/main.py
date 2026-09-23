@@ -182,12 +182,16 @@ def build_comps(home, chars, values):
         if not bldg_sf or not bldg_av:
             continue
 
+        year_built = to_float(char.get("char_yrblt"))
+        if home["year_built"] and year_built and abs(year_built - home["year_built"]) > 20:
+            continue
+
         bldg_psf = round(bldg_av / bldg_sf, 2)
 
         comps.append({
             "pin": pin,
             "bldg_sf": bldg_sf,
-            "year_built": to_float(char.get("char_yrblt")),
+            "year_built": year_built,
             "bldg_av": bldg_av,
             "land_av": to_float(value.get("mailed_land")),
             "total_av": to_float(value.get("mailed_tot")),
