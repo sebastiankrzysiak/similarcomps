@@ -15,8 +15,8 @@ export default function CompsTable({ comps }: Props) {
             <th className="px-4 py-3 text-right">Sq ft</th>
             <th className="px-4 py-3 text-right">Year built</th>
             <th className="px-4 py-3 text-right">Bldg value</th>
-            <th className="px-4 py-3 text-right">$/sq ft</th>
             <th className="px-4 py-3 text-right">Market value</th>
+            <th className="px-4 py-3 text-right">Market $/sq ft</th>
             <th className="px-4 py-3 text-right">vs You</th>
           </tr>
         </thead>
@@ -27,10 +27,10 @@ export default function CompsTable({ comps }: Props) {
               <td className="px-4 py-3 text-right">{comp.bldg_sf.toLocaleString()}</td>
               <td className="px-4 py-3 text-right">{comp.year_built}</td>
               <td className="px-4 py-3 text-right">{money(comp.bldg_av)}</td>
-              <td className="px-4 py-3 text-right">{moneyCents(comp.bldg_psf)}</td>
               <td className="px-4 py-3 text-right">{money(comp.bldg_market_value)}</td>
+              <td className="px-4 py-3 text-right">{moneyCents(comp.market_psf)}</td>
               <td className="px-4 py-3 text-right font-medium text-green-600">
-                {moneyCents(comp.diff_vs_home)}
+                {moneyCents(comp.diff_vs_home * 10)}
               </td>
             </tr>
           ))}

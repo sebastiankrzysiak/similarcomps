@@ -18,6 +18,7 @@ export type Comp = {
   bldg_av: number;
   bldg_psf: number;
   bldg_market_value: number;
+  market_psf: number;
   diff_vs_home: number;
   lat: number;
   lon: number;
