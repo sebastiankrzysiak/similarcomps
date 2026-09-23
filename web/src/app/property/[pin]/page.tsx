@@ -13,7 +13,7 @@ export default async function PropertyPage({ params }: Props) {
   const { pin } = await params;
   const API_URL = process.env.API_URL ?? "http://localhost:8000";
 
-  const res = await fetch(`${API_URL}/${pin}/comps`, {
+  const res = await fetch(`${API_URL}/property/${pin}/comps`, {
     cache: "no-store",
   });
 
