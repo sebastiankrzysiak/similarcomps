@@ -18,6 +18,7 @@ app.add_middleware(
 PARCEL_URL = "https://datacatalog.cookcountyil.gov/resource/nj4t-kc8j.json"
 CHARS_URL = "https://datacatalog.cookcountyil.gov/resource/x54s-btds.json"
 VALUES_URL = "https://datacatalog.cookcountyil.gov/resource/uzyt-m557.json"
+ADDRESS_URL = "https://datacatalog.cookcountyil.gov/resource/3723-97qp.json"
 
 APP_TOKEN = os.getenv("SOCRATA_APP_TOKEN")
 HEADERS = {"X-App-Token": APP_TOKEN} if APP_TOKEN else {}
@@ -94,6 +95,18 @@ async def get_neighbor_values(client, nbhd, class_, year):
     return await fetch_many(client, VALUES_URL, {
         "$select": "pin,mailed_bldg,mailed_land,mailed_tot",
         "$where": f"nbhd='{nbhd}' AND class='{class_}' AND year={year}",
+        "$limit": 5000,
+    })
+
+
+async def get_addresses(client, pins):
+    if not pins:
+        return []
+    pin_list = ",".join(f"'{p}'" for p in pins)
+    return await fetch_many(client, ADDRESS_URL, {
+        "$select": "pin,year,prop_address_full,prop_address_city_name,prop_address_zipcode_1",
+        "$where": f"pin in({pin_list})",
+        "$order": "year DESC",
         "$limit": 5000,
     })
 
@@ -198,6 +211,21 @@ def build_comps(home, chars, values):
         "median_psf": median_psf,
     }
 
+
+def attach_addresses(items, address_rows):
+    pin_to_addr = {}
+    for row in address_rows:
+        pin = row["pin"]
+        if pin not in pin_to_addr:
+            pin_to_addr[pin] = row
+
+    for item in items:
+        addr = pin_to_addr.get(item["pin"], {})
+        item["address"] = addr.get("prop_address_full")
+        item["city"] = addr.get("prop_address_city_name")
+        item["zip"] = addr.get("prop_address_zipcode_1")
+
+
 # ---------- endpoints ----------
 
 @app.get("/health")
@@ -209,7 +237,10 @@ def health():
 async def get_property(pin: str):
     pin = clean_pin(pin)
     async with httpx.AsyncClient(timeout=10) as client:
-        return await load_home(client, pin)
+        home = await load_home(client, pin)
+        address_rows = await get_addresses(client, [pin])
+    attach_addresses([home], address_rows)
+    return home
 
 
 @app.get("/property/{pin}/comps")
@@ -227,4 +258,11 @@ async def get_comps(pin: str):
             get_neighbor_values(client, nbhd, class_, year),
         )
 
-    return {"home": home, **build_comps(home, chars, values)}
+        result = build_comps(home, chars, values)
+
+        pins = [home["pin"]] + [c["pin"] for c in result["comps"]]
+        address_rows = await get_addresses(client, pins)
+
+    attach_addresses([home] + result["comps"], address_rows)
+
+    return {"home": home, **result}
