@@ -15,8 +15,8 @@ export default function HomeCard({ home }: Props) {
       <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Building sq ft" value={home.bldg_sf.toLocaleString()} />
         <Stat label="Assessed value" value={money(home.bldg_av)} />
-        <Stat label="$ per sq ft" value={moneyCents(home.bldg_psf)} />
         <Stat label="Market value" value={money(home.bldg_market_value)} />
+        <Stat label="Market $/sq ft" value={moneyCents(home.market_psf)} />
       </div>
     </div>
   );
