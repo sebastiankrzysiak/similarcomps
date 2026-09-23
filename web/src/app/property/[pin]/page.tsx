@@ -31,8 +31,8 @@ export default async function PropertyPage({ params }: Props) {
 
         <p className="mt-8 text-lg">
           <span className="font-semibold text-green-600">{data.count}</span> of{" "}
-          {data.total_comps} similar homes are assessed lower than yours. Median:{" "}
-          <span className="font-semibold">{moneyCents(data.median_psf)}</span>/sq ft
+          {data.total_comps} similar homes are assessed lower than yours. Median market value:{" "}
+          <span className="font-semibold">{moneyCents(data.median_psf * 10)}</span>/sq ft
         </p>
 
         <CompsTable comps={data.comps} />
