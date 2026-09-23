@@ -6,6 +6,8 @@ export type Home = {
   bldg_av: number;
   bldg_psf: number;
   bldg_market_value: number;
+  lat: number;
+  lon: number;
 };
 
 export type Comp = {
@@ -17,6 +19,8 @@ export type Comp = {
   bldg_psf: number;
   bldg_market_value: number;
   diff_vs_home: number;
+  lat: number;
+  lon: number;
 };
 
 export type CompsResponse = {

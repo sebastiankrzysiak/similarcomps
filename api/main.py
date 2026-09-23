@@ -111,6 +111,18 @@ async def get_addresses(client, pins):
     })
 
 
+async def get_locations(client, pins):
+    if not pins:
+        return []
+    pin_list = ",".join(f"'{p}'" for p in pins)
+    return await fetch_many(client, PARCEL_URL, {
+        "$select": "pin,year,lat,lon",
+        "$where": f"pin in({pin_list})",
+        "$order": "year DESC",
+        "$limit": 5000,
+    })
+
+
 # ---------- home loader ----------
 
 async def load_home(client, pin):
@@ -184,7 +196,7 @@ def build_comps(home, chars, values):
 
         year_built = to_float(char.get("char_yrblt"))
         if home["year_built"] and year_built and abs(year_built - home["year_built"]) > 20:
-            continue
+             continue
 
         bldg_psf = round(bldg_av / bldg_sf, 2)
 
@@ -230,6 +242,19 @@ def attach_addresses(items, address_rows):
         item["zip"] = addr.get("prop_address_zipcode_1")
 
 
+def attach_locations(items, location_rows):
+    pin_to_loc = {}
+    for row in location_rows:
+        pin = row["pin"]
+        if pin not in pin_to_loc:
+            pin_to_loc[pin] = row
+
+    for item in items:
+        loc = pin_to_loc.get(item["pin"], {})
+        item["lat"] = to_float(loc.get("lat"))
+        item["lon"] = to_float(loc.get("lon"))
+
+
 # ---------- endpoints ----------
 
 @app.get("/health")
@@ -264,9 +289,13 @@ async def get_comps(pin: str):
 
         result = build_comps(home, chars, values)
 
-        pins = [home["pin"]] + [c["pin"] for c in result["comps"]]
-        address_rows = await get_addresses(client, pins)
+        comp_pins = [c["pin"] for c in result["comps"]]
+        address_rows, location_rows = await asyncio.gather(
+            get_addresses(client, [home["pin"]] + comp_pins),
+            get_locations(client, comp_pins),
+        )
 
     attach_addresses([home] + result["comps"], address_rows)
+    attach_locations(result["comps"], location_rows)
 
     return {"home": home, **result}
